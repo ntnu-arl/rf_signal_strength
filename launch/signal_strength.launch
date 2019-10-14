@@ -1,0 +1,5 @@
+<launch>
+  <node name="signal_strength" pkg="signal_strength" type="signal_strength.py" output="screen" >
+    <param name="wifi_device_name" value="wlp4s0"/>
+  </node>
+</launch>
