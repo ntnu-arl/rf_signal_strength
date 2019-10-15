@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, Float32
 import os
-
+import iperf3
 
 invalid = -9999
 
@@ -38,13 +38,38 @@ def get_signal_strength(timer_event):
 		noise_sig_strength_pub.publish(noise_msg)
 
 
+def get_bandwidth(timer_event):
+	global bandwidth_pub, iperf_server_addr
+	try:
+		client = iperf3.Client()
+		client.duration = 1
+		client.server_hostname = iperf_server_addr
+		client.port = 5201
+		print("Running Iperf3")
+		result = client.run()
+		print("Iperf3 Complete")
+
+		tx_mbps_pub.publish(result.sent_Mbps)
+		rx_mbps_pub.publish(result.received_Mbps)
+		re_tx_pub.publish(result.retransmits)
+	except:
+		tx_mbps_pub.publish(-1.0)
+		rx_mbps_pub.publish(-1.0)
+		re_tx_pub.publish(-1.0)
+
+
 rospy.init_node('signal_strength', anonymous=True)
 wifi_device_name = rospy.get_param("/signal_strength/wifi_device_name", default="wlp4s0")
+iperf_server_addr = rospy.get_param("/signal_strength/iperf_server_addr", default="192.168.0.40")
 rospy.loginfo("Getting Signal Strength on Device : %s", wifi_device_name)
 
 level_sig_strength_pub = rospy.Publisher("signal_strength/level", Int32, queue_size=10)
 link_sig_strength_pub = rospy.Publisher("signal_strength/link", Int32, queue_size=10)
 noise_sig_strength_pub = rospy.Publisher("signal_strength/noise", Int32, queue_size=10)
+rx_mbps_pub = rospy.Publisher("signal_strength/rx_mbps", Float32, queue_size=10)
+tx_mbps_pub = rospy.Publisher("signal_strength/tx_mbps", Float32, queue_size=10)
+re_tx_pub = rospy.Publisher("signal_strength/re_tx", Float32, queue_size=10)
 signal_strength_timer = rospy.Timer(rospy.Duration(0.25),get_signal_strength)
+bandwidth_timer = rospy.Timer(rospy.Duration(2.0),get_bandwidth)
 
 rospy.spin()
