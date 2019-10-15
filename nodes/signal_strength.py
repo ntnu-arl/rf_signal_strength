@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import Int16
+from std_msgs.msg import Int32
 import os
 
 
@@ -8,9 +8,9 @@ invalid = -9999
 
 def get_signal_strength(timer_event):
 	global wifi_device_name, level_sig_strength_pub, link_sig_strength_pub, noise_sig_strength_pub, invalid
-	link_msg = Int16()
-	level_msg = Int16()
-	noise_msg = Int16()
+	link_msg = Int32()
+	level_msg = Int32()
+	noise_msg = Int32()
 	try:
 		call_result = os.popen("cat  /proc/net/wireless").read()
 		if wifi_device_name in call_result:
@@ -39,12 +39,12 @@ def get_signal_strength(timer_event):
 
 
 rospy.init_node('signal_strength', anonymous=True)
-wifi_device_name = rospy.get_param("wifi_device_name", default="wlp4s0")
+wifi_device_name = rospy.get_param("/signal_strength/wifi_device_name", default="wlp4s0")
 rospy.loginfo("Getting Signal Strength on Device : %s", wifi_device_name)
 
-level_sig_strength_pub = rospy.Publisher("signal_strength/level", Int16, queue_size=10)
-link_sig_strength_pub = rospy.Publisher("signal_strength/link", Int16, queue_size=10)
-noise_sig_strength_pub = rospy.Publisher("signal_strength/noise", Int16, queue_size=10)
+level_sig_strength_pub = rospy.Publisher("signal_strength/level", Int32, queue_size=10)
+link_sig_strength_pub = rospy.Publisher("signal_strength/link", Int32, queue_size=10)
+noise_sig_strength_pub = rospy.Publisher("signal_strength/noise", Int32, queue_size=10)
 signal_strength_timer = rospy.Timer(rospy.Duration(0.25),get_signal_strength)
 
 rospy.spin()
